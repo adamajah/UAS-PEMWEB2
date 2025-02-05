@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Development Plan</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .goal-form {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .goal-list {
+            margin-top: 30px;
+        }
+
+        .goal-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid var(--secondary);
+            box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+        }
+
+        .progress-container {
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Personal Development Plan 🚀</h1>
+    
+    <div class="container">
+        <div class="goal-form">
+            <h2>Tambahkan Target Baru</h2>
+            <form id="goalForm">
+                <input type="text" id="goalTitle" placeholder="Judul Target" required>
+                <textarea id="goalDescription" placeholder="Deskripsi" rows="3"></textarea>
+                <select id="goalCategory">
+                    <option value="skill">Pengembangan Skill</option>
+                    <option value="career">Pengembangan Karir</option>
+                    <option value="health">Kesehatan</option>
+                    <option value="relationship">Hubungan Sosial</option>
+                </select>
+                <input type="number" id="goalTarget" placeholder="Target Hari" min="1" required>
+                <button type="submit">Tambahkan Target</button>
+            </form>
+        </div>
+
+        <div class="progress-container">
+            <canvas id="progressChart"></canvas>
+        </div>
+    </div>
+
+    <div class="goal-list" id="goalList"></div>
+
+    <script>
+        let goals = JSON.parse(localStorage.getItem('goals')) || [];
+        let chart = null;
+
+        function updateChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            if (chart) chart.destroy();
+            
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Remaining'],
+                    datasets: [{
+                        data: [
+                            goals.filter(g => g.completed).length,
+                            goals.filter(g => !g.completed).length
+                        ],
+                        backgroundColor: ['#2ecc71', '#e74c3c']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Progress Pengembangan Diri'
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderGoals() {
+            const goalList = document.getElementById('goalList');
+            goalList.innerHTML = goals.map((goal, index) => `
+                <div class="goal-item">
+                    <h3>${goal.title} (${goal.category})</h3>
+                    <p>${goal.description}</p>
+                    <div>
+                        <span>Target: ${goal.target} hari</span>
+                        <button onclick="toggleGoal(${index})">${goal.completed ? '✓ Selesai' : 'Tandai Selesai'}</button>
+                        <button onclick="deleteGoal(${index})">Hapus</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            localStorage.setItem('goals', JSON.stringify(goals));
+            updateChart();
+        }
+
+        function addGoal(e) {
+            e.preventDefault();
+            const newGoal = {
+                title: document.getElementById('goalTitle').value,
+                description: document.getElementById('goalDescription').value,
+                category: document.getElementById('goalCategory').value,
+                target: document.getElementById('goalTarget').value,
+                completed: false,
+                createdAt: new Date()
+            };
+            
+            goals.push(newGoal);
+            renderGoals();
+            e.target.reset();
+        }
+
+        function toggleGoal(index) {
+            goals[index].completed = !goals[index].completed;
+            renderGoals();
+        }
+
+        function deleteGoal(index) {
+            goals.splice(index, 1);
+            renderGoals();
+        }
+
+        document.getElementById('goalForm').addEventListener('submit', addGoal);
+        renderGoals();
+    </script>
+</body>
+</html>
